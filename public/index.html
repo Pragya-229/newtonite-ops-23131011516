@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ops Under Pressure</title>
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--ink:#0f172a;--mut:#64748b;--line:#e2e8f0;--pri:#4f46e5;--side:#0f172a}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select{font:inherit}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;cursor:pointer;transition:.15s}
+.btn:hover{background:#f8fafc;border-color:#cbd5e1}.btn.pri{background:var(--pri);color:#fff;border-color:var(--pri)}.btn.pri:hover{background:#4338ca}
+.app{display:flex;min-height:100vh}
+.side{width:240px;flex:none;background:var(--side);color:#cbd5e1;display:flex;flex-direction:column;padding:20px 12px;position:sticky;top:0;height:100vh;z-index:30;transition:transform .2s}
+.brand{color:#fff;font-weight:700;font-size:18px;padding:0 10px 20px}
+.nav{display:flex;flex-direction:column;gap:4px;flex:1}
+.nav a{padding:10px 12px;border-radius:8px;cursor:pointer;color:#cbd5e1;font-size:14px}
+.nav a:hover{background:#1e293b}.nav a.on{background:var(--pri);color:#fff}
+.me{border-top:1px solid #1e293b;padding:14px 10px 0;font-size:13px}.me b{display:block;color:#fff;margin-bottom:8px}
+.main{flex:1;min-width:0}
+.top{display:flex;align-items:center;gap:12px;padding:16px 24px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.top h1{font-size:20px;margin:0;flex:1}.burger{display:none}
+.search{padding:8px 12px;border:1px solid var(--line);border-radius:8px;width:260px;max-width:100%}
+.content{padding:24px;max-width:1200px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;cursor:pointer;transition:.15s;text-align:left}
+.stat:hover{box-shadow:0 4px 14px rgba(15,23,42,.08);transform:translateY(-1px)}.stat.on{border-color:var(--pri);box-shadow:0 0 0 2px #e0e7ff}
+.stat small{color:var(--mut);font-size:13px}.stat div{font-size:30px;font-weight:700;margin-top:4px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:grid;grid-template-columns:64px minmax(0,1fr) 150px 90px 120px 100px;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.row.head{background:#f8fafc;color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.04em;padding:10px 16px}
+.row.item{cursor:pointer;transition:background .12s}.row.item:hover{background:#eef2ff}
+.id{color:var(--mut);font-size:13px}.ttl{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sub{font-size:12px;color:var(--mut);font-weight:400}.mut{color:var(--mut);font-size:13px}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.s-open{background:#dbeafe;color:#1d4ed8}.s-in_progress{background:#fef3c7;color:#b45309}.s-awaiting_approval{background:#ede9fe;color:#6d28d9}
+.s-resolved{background:#dcfce7;color:#15803d}.s-closed{background:#e2e8f0;color:#475569}
+.p-low{background:#e2e8f0;color:#475569}.p-medium{background:#dbeafe;color:#1d4ed8}.p-high{background:#ffedd5;color:#c2410c}.p-urgent{background:#fee2e2;color:#b91c1c}
+.empty{padding:40px;text-align:center;color:var(--mut)}.more{padding:14px;text-align:center}
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.4);opacity:0;pointer-events:none;transition:.2s;z-index:40}.overlay.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(480px,100%);background:#fff;z-index:50;transform:translateX(100%);transition:transform .25s;display:flex;flex-direction:column;box-shadow:-8px 0 30px rgba(0,0,0,.15)}
+.drawer.on{transform:none}.dh{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:flex-start}.dh h2{margin:0;font-size:18px;flex:1;overflow-wrap:anywhere}
+.db{padding:20px;overflow-y:auto;flex:1}.sec{margin-bottom:22px}.sec h4{margin:0 0 10px;font-size:12px;text-transform:uppercase;color:var(--mut);letter-spacing:.05em}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;font-size:14px}.meta span{display:block;color:var(--mut);font-size:12px}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.tl{border-left:2px solid var(--line);margin-left:6px;padding-left:16px}.ev{position:relative;margin-bottom:14px;font-size:14px}
+.ev:before{content:"";position:absolute;left:-23px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--pri)}
+.ev time{display:block;color:var(--mut);font-size:12px}.cm{display:flex;gap:8px;margin-top:10px}.cm input{flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:8px;min-width:0}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:8px;align-items:center;max-width:92vw}
+.t{background:#0f172a;color:#fff;padding:10px 16px;border-radius:8px;font-size:14px}.t.err{background:#b91c1c}
+.login{min-height:100vh;display:grid;place-items:center;padding:16px}.lc{background:#fff;border:1px solid var(--line);border-radius:14px;padding:28px;width:min(380px,100%);display:flex;flex-direction:column;gap:12px}
+.lc input{padding:10px 12px;border:1px solid var(--line);border-radius:8px}.lc h2{margin:0 0 4px}
+@media(max-width:1000px){.cards{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:56px minmax(0,1fr) 140px 90px 100px}.row>:nth-child(6){display:none}}
+@media(max-width:760px){
+ .side{position:fixed;left:0;transform:translateX(-100%)}.side.on{transform:none}.burger{display:inline-block}
+ .top{padding:12px 14px;flex-wrap:wrap}.top h1{font-size:17px}.search{width:100%;order:3}.content{padding:14px}.cards{gap:10px}.stat div{font-size:24px}
+ .row.head{display:none}.row{grid-template-columns:1fr auto;gap:6px 10px}.row>:nth-child(1){display:none}.row>:nth-child(2){grid-column:1/-1}
+ .row>:nth-child(5),.row>:nth-child(6){display:block;font-size:12px}.meta{grid-template-columns:1fr}}
+</style></head><body><div id="root"></div><div id="toast"></div>
+<script>
+const NEXT={open:['in_progress'],in_progress:['open','awaiting_approval'],awaiting_approval:['resolved','in_progress'],resolved:['closed','in_progress'],closed:[]}; // UI hint only; server enforces rules
+const VIEWS={all:['All items',''],mine:['Assigned to me','assignee=me'],urgent:['Unassigned urgent','unassigned=1&priority=urgent'],approve:['Awaiting my approval','approvable=1']};
+const CARDS=[['Total Items','total',''],['Open','open','status=open'],['Urgent','urgent','priority=urgent'],['Awaiting Approval','awaiting','status=awaiting_approval']];
+let token=localStorage.getItem('t'),me=JSON.parse(localStorage.getItem('u')||'null'),view='all',card=null,cursor=null,cur=null,search='';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nice=s=>esc(String(s).replaceAll('_',' '));
+const badge=(k,v)=>`<span class="badge ${k}-${esc(v)}">${nice(v)}</span>`;
+const who=id=>id==null?'Unassigned':(me&&id===me.id?'You':'User #'+id);
+const fdate=d=>d?new Date(d).toLocaleDateString():'-';
+function toast(m,err){const t=document.createElement('div');t.className='t'+(err?' err':'');t.textContent=m;$('#toast').append(t);setTimeout(()=>t.remove(),3500)}
+async function api(m,p,b){const r=await fetch(p,{method:m,headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:b?JSON.stringify(b):undefined});
+ const j=await r.json();if(r.status===401){logout();}if(!r.ok)throw Object.assign(new Error(j.error),{status:r.status});return j}
+function renderLogin(){$('#root').innerHTML=`<div class="login"><div class="lc"><h2>Operations Under Pressure</h2><span class="mut">Sign in to continue</span>
+ <input id="e" value="member1@ops.test"><input id="p" type="password" value="password123"><button class="btn pri" onclick="login()">Login</button><div id="le" style="color:#b91c1c;font-size:14px"></div></div></div>`}
+async function login(){try{const r=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:$('#e').value,password:$('#p').value})});
+ const j=await r.json();if(!r.ok)throw new Error(j.error);token=j.token;me=j.user;localStorage.setItem('t',token);localStorage.setItem('u',JSON.stringify(me));start()}catch(e){$('#le').textContent=e.message}}
+function logout(){token=null;me=null;localStorage.clear();renderLogin()}
+function start(){if(!token)return renderLogin();
+ $('#root').innerHTML=`<div class="app"><aside class="side" id="side"><div class="brand">⚡ OpsDesk</div><nav class="nav">${Object.entries(VIEWS).map(([k,v])=>`<a data-v="${k}" onclick="setView('${k}')">${v[0]}</a>`).join('')}</nav>
+ <div class="me"><b>${esc(me?me.name:'Signed in')}</b><button class="btn" onclick="logout()">Logout</button></div></aside>
+ <div class="main"><header class="top"><button class="btn burger" onclick="$('#side').classList.toggle('on')">☰</button><h1 id="title"></h1>
+ <input class="search" id="q" placeholder="Search items by title…" onchange="search=this.value;refresh()"></header>
+ <div class="content"><div class="cards" id="cards"></div><div class="panel"><div class="row head"><div>ID</div><div>Title</div><div>Status</div><div>Priority</div><div>Assignee</div><div>Due</div></div>
+ <div id="list"></div><div class="more" id="more"></div></div></div></div></div>
+ <div class="overlay" id="ov" onclick="closeDrawer()"></div><aside class="drawer" id="dr"></aside>`;refresh()}
+function setView(v){view=v;card=null;$('#side').classList.remove('on');refresh()}
+function setCard(i){card=card===i?null:i;refresh()}
+function refresh(){document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===view));$('#title').textContent=VIEWS[view][0];loadStats();load(true)}
+async function loadStats(){const s=await api('GET','/stats');
+ $('#cards').innerHTML=CARDS.map((c,i)=>`<button class="stat ${card===i?'on':''}" onclick="setCard(${i})"><small>${c[0]}</small><div>${s[c[1]]}</div></button>`).join('')}
+async function load(reset){if(reset){cursor=null;$('#list').innerHTML=''}
+ const qs=[VIEWS[view][1],card!==null?CARDS[card][2]:'','limit=20',search?'q='+encodeURIComponent(search):'',cursor?'cursor='+cursor:''].filter(Boolean).join('&');
+ const r=await api('GET','/items?'+qs);
+ if(reset&&!r.items.length)$('#list').innerHTML='<div class="empty">No items match these filters.</div>';
+ $('#list').insertAdjacentHTML('beforeend',r.items.map(i=>`<div class="row item" onclick="openItem(${i.id})"><div class="id">#${i.id}</div>
+  <div class="ttl">${esc(i.title)}<div class="sub">${nice(i.type)} · team ${i.team_id}</div></div><div>${badge('s',i.status)}</div><div>${badge('p',i.priority)}</div>
+  <div class="mut">${who(i.assignee_id)}</div><div class="mut">${fdate(i.due_date)}</div></div>`).join(''));
+ cursor=r.nextCursor;$('#more').innerHTML=cursor?'<button class="btn" onclick="load(false)">Load more</button>':''}
+async function openItem(id){cur=await api('GET','/items/'+id);const ev=await api('GET',`/items/${id}/activity`);
+ $('#dr').innerHTML=`<div class="dh"><h2>#${cur.id} ${esc(cur.title)}</h2><button class="btn" onclick="closeDrawer()">✕</button></div><div class="db">
+ <div class="sec">${badge('s',cur.status)} ${badge('p',cur.priority)}<p style="color:var(--mut)">${esc(cur.description)||'No description'}</p></div>
+ <div class="sec"><h4>Details</h4><div class="meta"><div><span>Assignee</span>${who(cur.assignee_id)}</div><div><span>Type</span>${nice(cur.type)}</div><div><span>Team</span>#${cur.team_id}</div>
+ <div><span>Due</span>${fdate(cur.due_date)}</div><div><span>Created</span>${fdate(cur.created_at)}</div><div><span>Version</span>v${cur.version}</div></div></div>
+ <div class="sec"><h4>Actions</h4><div class="acts">${cur.assignee_id==null?'<button class="btn pri" onclick="act(\'claim\')">Claim item</button>':''}
+ ${NEXT[cur.status].map(s=>`<button class="btn" onclick="act('transition','${s}')">Move to ${nice(s)}</button>`).join('')}
+ <button class="btn" onclick="editTitle()">Edit title</button>
+ <select class="btn" onchange="setPriority(this.value)"><option value="">Set priority…</option>${['low','medium','high','urgent'].map(p=>`<option>${p}</option>`).join('')}</select></div></div>
+ <div class="sec"><h4>Activity</h4><div class="tl">${ev.map(e=>`<div class="ev"><b>${esc(e.actor)}</b> ${nice(e.kind)} ${e.kind==='comment'?'— '+esc(e.detail.text):(e.detail.to!==undefined?`(${nice(e.detail.from??'none')} → ${nice(e.detail.to)})`:'')}<time>${new Date(e.created_at).toLocaleString()}</time></div>`).join('')}</div>
+ <div class="cm"><input id="c" placeholder="Add a comment…"><button class="btn pri" onclick="comment()">Post</button></div></div></div>`;
+ $('#ov').classList.add('on');$('#dr').classList.add('on')}
+function closeDrawer(){$('#ov').classList.remove('on');$('#dr').classList.remove('on')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
+async function guard(fn,ok){try{await fn();if(ok)toast(ok)}catch(e){toast(e.status===409?'This item changed — reloaded the latest version. ('+e.message+')':e.message,true);if(e.status===409&&cur)openItem(cur.id)}}
+const after=async()=>{await openItem(cur.id);refresh()};
+const act=(k,to)=>guard(async()=>{await api('POST',`/items/${cur.id}/${k}`,k==='claim'?null:{to,version:cur.version});await after()},'Updated');
+const editTitle=()=>guard(async()=>{const t=prompt('New title',cur.title);if(t){await api('PATCH','/items/'+cur.id,{title:t,version:cur.version});await after()}},'Title updated');
+const setPriority=p=>p&&guard(async()=>{await api('PATCH','/items/'+cur.id,{priority:p,version:cur.version});await after()},'Priority updated');
+const comment=()=>guard(async()=>{const t=$('#c').value;if(!t.trim())return;await api('POST',`/items/${cur.id}/comments`,{text:t});await openItem(cur.id)},'Comment added');
+start();
+</script></body></html>
